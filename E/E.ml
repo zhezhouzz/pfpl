@@ -3,17 +3,19 @@
   * Defined in Statics, PFPL:Ch4.
   *)
 
-(* The only sort in E is exp. *)
+(* Sort.
+   The only sort in E is exp. 
+ *)
 type sort =
   | Sexp
 
-(* PFPL notation:
+(* Valence. PFPL notation:
     x1,...xk.a
    where a is abt argument, and x's are variables bound to a.
  *)
 type valence = sort list * sort
 
-(* PFPL notation: 
+(* Arity. PFPL notation: 
     (v1,...vn)s 
    where s is sort of operator, and v is valence of an argument.
    Arity of abts is generalized from that of asts (s1,...sn)s.
@@ -51,7 +53,13 @@ let arity op : arity =
 
 type var = string
 
-(* Abstract binding tree *)
+(* Abstract binding tree. PFPL notation:
+    a ::= 
+        | x 
+   where x is a variable, x1
+        | o(x1.a1;...xn.an)
+   where x is a sequence of variables, a is a sub-abt.
+ *)
 type abt =
   | Aleaf of var
   | Anode of op * (var list * abt) list
@@ -88,6 +96,7 @@ let hello_len =
   Anode (Olet, [ ([], e1); ([x], e2) ])
 (* }}} *)
 
+(* Substitution. *)
 let rec subst (b: abt) (x: var) (a: abt) : abt =
   match a with
   | Aleaf x' -> if x = x' then b else a
@@ -95,6 +104,7 @@ let rec subst (b: abt) (x: var) (a: abt) : abt =
       let args' = [] in  (* TODO *)
       Anode (op, args')
 
+(* Type. *)
 type typ =
   | Tnum
   | Tstr
