@@ -7,28 +7,41 @@
 type sort =
   | Sexp
 
+(* PFPL notation:
+    x1,...xk.a
+   where a is abt argument, and x's are variables bound to a.
+ *)
 type valence = sort list * sort
 
+(* PFPL notation: 
+    (v1,...vn)s 
+   where s is sort of operator, and v is valence of an argument.
+   Arity of abts is generalized from that of asts (s1,...sn)s.
+ *)
 type arity = {
   sort:   sort;
   params: valence list;
 }
 
-let nullary_exp = ([], Sexp)
+(* Operations in E are 
+   num[n], str[s], plus, times, cat, len, let.
+ *)
+type op =               (* PFPL notations:    *)
+  | Onum of int         (*      num[n]        *)
+  | Ostr of string      (*      str[s]        *)
+  | Oplus               (*      plus(e1; e2)  *)
+  | Otimes              (*      times(e1; e2) *)
+  | Ocat                (*      cat(e1; e2)   *)
+  | Olen                (*      len(e)        *)
+  | Olet                (*      let(e1; x.e2) *)
 
-(* Operations in E are num[n], str[s], plus, times, cat, len, let.
-   Their arguments:
+let nullary_exp = ([], Sexp)
+(* Op arguments:
      num[n], str[s]:   []
      plus, times, cat: [exp, exp]
      len:              [exp]
      let:              [exp, [exp].exp]
  *)
-type op =
-  | Onum of int | Ostr of string
-  | Oplus | Otimes | Ocat
-  | Olen
-  | Olet
-
 let arity op : arity =
   match op with
   | Onum _ | Ostr _       -> { sort = Sexp; params = [] }
@@ -38,18 +51,17 @@ let arity op : arity =
 
 type var = string
 
+(* Abstract binding tree *)
 type abt =
   | Aleaf of var
   | Anode of op * (var list * abt) list
 
-type binding = (var * sort) list
-
+type sort_binding = (var * sort) list
 (* Return sort if well-formed --- subtrees should match arity *)
-let rec abt_sort (b: binding) (a: abt) : sort option =
+let rec abt_sort (b: sort_binding) (a: abt) : sort option =
   match a with
   | Aleaf x -> List.assoc_opt x b
   | Anode (op, args) -> 
-      let open List in
       let { sort; params } = arity op in
       let arg_correct (var_sorts, abt'_sort) (vars, abt') =
         List.length var_sorts = List.length vars &&
@@ -80,7 +92,7 @@ let rec subst (b: abt) (x: var) (a: abt) : abt =
   match a with
   | Aleaf x' -> if x = x' then b else a
   | Anode (op, args) ->
-      let args' = [] in
+      let args' = [] in  (* TODO *)
       Anode (op, args')
 
 type typ =
