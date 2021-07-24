@@ -37,19 +37,17 @@ type op =               (* PFPL notations:    *)
   | Olen                (*      len(e)        *)
   | Olet                (*      let(e1; x.e2) *)
 
-let nullary_exp = ([], Sexp)
-(* Op arguments:
-     num[n], str[s]:   []
-     plus, times, cat: [exp, exp]
-     len:              [exp]
-     let:              [exp, [exp].exp]
- *)
+let nobinding_exp = ([], Sexp)
 let arity op : arity =
   match op with
-  | Onum _ | Ostr _       -> { sort = Sexp; params = [] }
-  | Oplus | Otimes | Ocat -> { sort = Sexp; params = [nullary_exp; nullary_exp] }
-  | Olen                  -> { sort = Sexp; params = [nullary_exp] }
-  | Olet                  -> { sort = Sexp; params = [nullary_exp; ([Sexp], Sexp)] }
+  | Onum _ | Ostr _ ->
+      { sort = Sexp; params = [] }
+  | Oplus | Otimes | Ocat ->
+      { sort = Sexp; params = [nobinding_exp; nobinding_exp] }
+  | Olen ->
+      { sort = Sexp; params = [nobinding_exp] }
+  | Olet ->
+      { sort = Sexp; params = [nobinding_exp; ([Sexp], Sexp)] }
 
 type var = string
 
