@@ -14,7 +14,7 @@ type arity = {
   params: valence list;
 }
 
-let no_binding_valence = ([], Sexp)
+let nullary_exp = ([], Sexp)
 
 (* Operations in E are num[n], str[s], plus, times, cat, len, let.
    Their arguments:
@@ -32,9 +32,9 @@ type op =
 let arity op : arity =
   match op with
   | Onum _ | Ostr _       -> { sort = Sexp; params = [] }
-  | Oplus | Otimes | Ocat -> { sort = Sexp; params = [no_binding_valence; no_binding_valence] }
-  | Olen                  -> { sort = Sexp; params = [no_binding_valence] }
-  | Olet                  -> { sort = Sexp; params = [no_binding_valence; ([Sexp], Sexp)] }
+  | Oplus | Otimes | Ocat -> { sort = Sexp; params = [nullary_exp; nullary_exp] }
+  | Olen                  -> { sort = Sexp; params = [nullary_exp] }
+  | Olet                  -> { sort = Sexp; params = [nullary_exp; ([Sexp], Sexp)] }
 
 type var = string
 
