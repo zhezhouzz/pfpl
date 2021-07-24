@@ -1,0 +1,13 @@
+(copy_files# parsing/*.ml{,i})
+
+(library
+  (wrapped false)
+  (name parsing)
+  (modules_without_implementation ast)
+  (modules
+  ast
+  parser
+  lexer
+  parse
+)
+)
