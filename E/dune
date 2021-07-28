@@ -23,6 +23,8 @@
 
 (library
   (name statics)
+  (inline_tests)
+  (preprocess (pps ppx_inline_test))
   (modules
     statics)
   (libraries abt)

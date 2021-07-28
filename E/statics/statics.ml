@@ -30,6 +30,26 @@ let rec abt_sort (a: abt) (ctx: sort_context) : sort option =
       then Some sort
       else None
 
+(* Examples {{{ *)
+(* x *)
+let variable_x = Aleaf "x"
+(* times(str["q"], num[2]) *)
+let q2 = Anode (
+  Otimes, 
+  [ ([], Anode (Ostr "q", [])); 
+    ([], Anode (Onum 2, [])) ])
+(* let(str["hello"]; x.len(x)) *)
+let hello_len = 
+  let e1 : abt = Anode (Ostr "hello", []) in
+  let x : var = "x" in
+  let e2 : abt = Anode (Olen, [ ([], Aleaf x) ]) in 
+  Anode (Olet, [ ([], e1); ([x], e2) ])
+(* }}} *)
+
+let%test _ = abt_sort variable_x [] = None
+let%test _ = abt_sort q2 [] = Some Sexp
+let%test _ = abt_sort hello_len [] = Some Sexp
+
 (* https://ocaml.org/manual/bindingops.html *)
 let ( let* ) o f =
   match o with
@@ -40,6 +60,7 @@ let return x = Some x
 
 type typ_context = (var * typ) list
 
+(* Return type if (well-formed and) well-typed *)
 let rec abt_typ (a: abt) (ctx: typ_context) : typ option =
   match a with
   | Aleaf x -> List.assoc_opt x ctx
@@ -65,3 +86,7 @@ let rec abt_typ (a: abt) (ctx: typ_context) : typ option =
           return typ2
       | (Onum _ | Ostr _ | Oplus | Otimes | Ocat | Olen | Olet), _ ->
           None (* a is not well-formed *)
+
+let%test _ = abt_typ variable_x [] = None
+let%test _ = abt_typ q2 [] = None
+let%test _ = abt_typ hello_len [] = Some Tnum
