@@ -1,3 +1,5 @@
+; E, the simple expression language.
+; Defined in Statics, PFPL:Ch4.
 (library
   (name e)
   (modules

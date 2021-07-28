@@ -1,8 +1,3 @@
-(**
-  * E, the simple expression language.
-  * Defined in Statics, PFPL:Ch4.
-  *)
-
 (* Sort.
    The only sort in E is exp. 
  *)
