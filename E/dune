@@ -1,5 +1,28 @@
+(copy_files# parsing/*.ml{,i})
+
 (library
-  (name e)
+  (name abt)
+  (modules_without_implementation abt)
   (modules
-    abt
-    statics))
+  abt
+  )
+)
+
+(library
+  (name parsing)
+  (modules_without_implementation past)
+  (modules
+  past
+  parser
+  lexer
+  parse
+)
+(libraries abt)
+)
+
+(library
+(name e)
+(modules
+statics)
+(libraries abt)
+)
