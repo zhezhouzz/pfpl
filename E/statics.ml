@@ -19,7 +19,7 @@ type sort_context = (var * sort) list
 let rec abt_sort (a: abt) (ctx: sort_context) : sort option =
   match a with
   | Aleaf x -> List.assoc_opt x ctx
-  | Anode (op, args) -> 
+  | Anode (op, args) ->
       let { sort; params } = arity op in
       let arg_correct (var_sorts, abt'_sort) (vars, abt') =
         List.length var_sorts = List.length vars &&
@@ -47,7 +47,7 @@ let rec abt_typ (a: abt) (ctx: typ_context) : typ option =
       match op, args with
       | Onum _, [] -> Some Tnum
       | Ostr _, [] -> Some Tstr
-      | Oplus, [([], a1); ([], a2)] | Otimes, [([], a1); ([], a2)] -> 
+      | Oplus, [([], a1); ([], a2)] | Otimes, [([], a1); ([], a2)] ->
           let* typ1 = abt_typ a1 ctx in
           let* typ2 = abt_typ a2 ctx in
           if typ1 = Tnum && typ2 = Tnum then return Tnum else None
@@ -55,7 +55,7 @@ let rec abt_typ (a: abt) (ctx: typ_context) : typ option =
           let* typ1 = abt_typ a1 ctx in
           let* typ2 = abt_typ a2 ctx in
           if typ1 = Tstr && typ2 = Tstr then return Tstr else None
-      | Olen, [([], a1)] -> 
+      | Olen, [([], a1)] ->
           let* typ1 = abt_typ a1 ctx in
           if typ1 = Tstr then return Tnum else None
       | Olet, [([], a1); ([x], a2)] ->
@@ -63,5 +63,5 @@ let rec abt_typ (a: abt) (ctx: typ_context) : typ option =
           let ctx' = (x, typ1) :: ctx in
           let* typ2 = abt_typ a2 ctx' in
           return typ2
-      | (Onum _ | Ostr _ | Oplus | Otimes | Ocat | Olen | Olet), _ -> 
+      | (Onum _ | Ostr _ | Oplus | Otimes | Ocat | Olen | Olet), _ ->
           None (* a is not well-formed *)
