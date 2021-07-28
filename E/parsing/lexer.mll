@@ -20,7 +20,14 @@ let next_line lexbuf =
 (* regular expressions *)
 let whitespace = ' ' | '\t'
 let newline = "\r\n" | '\r' | '\n'
-let ident = ['A'-'Z' 'a'-'z' '0'-'9' '_']*
+let lowercase = ['a'-'z' '_']
+let uppercase = ['A'-'Z']
+let identchar = ['A'-'Z' 'a'-'z' '_' '\'' '0'-'9']
+
+let ident = (lowercase | uppercase) identchar*
+let number = ['0'-'9'] ['0'-'9' '_']*
+let str = '"' identchar* '"'
+
 
 rule next_token = parse
   | eof { EOF }
@@ -34,11 +41,22 @@ rule next_token = parse
   (* YOUR TOKENS HERE... *)
   | '(' { LPAR }
   | ')' { RPAR }
-  | "id" { ID }
-  | "fun" { FUN }
-  | "->" { ARROW }
+  | '[' { LBRACK }
+  | ']' { RBRACK }
+  | "num" { NUM }
+  | "str" { STR }
+  | "plus" { PLUS }
+  | "times" { TIMES }
+  | "cat" { CAT }
+  | "len" { LEN }
+  | "let" { LET }
+  | "." { DOT }
+  | ";" { SEMICOLON }
+  | "," { COMMA }
   (* lex identifiers last, so keywords are not lexed as identifiers *)
-  | ident as atom { ATOM atom }
+  | number as number { NUMBER (int_of_string number) }
+  | ident as ident { IDENT ident }
+  | str as str { STRING str }
 
   (* no match? raise exception *)
   | _ as c { illegal c }

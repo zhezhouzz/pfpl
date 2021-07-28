@@ -1,45 +1,44 @@
 %{
-    open Ast
-    let make_fun args body =
-      let rec aux args =
-        match args with
-        | [] -> body
-        | (info, hd) :: tl -> info, Fun (hd, aux tl)
-      in
-      aux args
-    let make_app es =
-      let rec aux es =
-        match es with
-        | [] -> failwith "never happen"
-        | [e] -> e
-        | (info, h) :: tl -> info, App (aux tl, (info, h))
-      in
-      aux (List.rev es)
+    (* open Past *)
 %}
 (* tokens *)
-%token EOF LPAR RPAR FUN ARROW ID
-%token <string> ATOM
+%token EOF LPAR RPAR LBRACK RBRACK
+(* keywords *)
+%token NUM STR PLUS TIMES CAT LEN LET DOT SEMICOLON COMMA
+%token <string> STRING IDENT
+%token <int> NUMBER
 
 (* start symbol *)
-%start <Ast.t> sexp_eof
+%start <Past.abtt> abtt_eof
 
 %%
 
-sexp_eof:
-  | e=sexp; EOF { e }
+abtt_eof:
+  | e=abtt; EOF { e }
   ;
-args:
-  | a=ATOM {[$startpos, a]}
-  | a=ATOM b=args {($startpos, a) :: b}
+abtt:
+  | o=opt LPAR a=bindings RPAR {$startpos, Past.Anode (o, a)}
+  | a=IDENT {$startpos, Past.Aleaf a }
   ;
-sexp_list:
-  | x=sexp {[x]}
-  | x=sexp_list y=sexp {x @ [y]}
-sexp:
-  | FUN x=args ARROW b=sexp {make_fun x b}
-  | LPAR a=sexp_list RPAR {make_app a }
-  | ID {$startpos, Ast.Fun ("x", ($startpos, Ast.Var "x"))}
-  | a=ATOM {$startpos, Ast.Var a }
+bindings:
+  | b=binding SEMICOLON s=bindings {b :: s}
+  | b=binding {[b]}
   ;
-
+binding:
+  | a=abtt {([], a)}
+  | v=vars DOT a=abtt {(v, a)}
+  ;
+vars:
+  | x=IDENT COMMA v=vars {x :: v}
+  | x=IDENT {[x]}
+  ;
+opt:
+  | NUM LBRACK a=NUMBER RBRACK {$startpos, Abt.Onum a}
+  | STR LBRACK a=STRING RBRACK {$startpos, Abt.Ostr a}
+  | PLUS {$startpos, Abt.Oplus}
+  | TIMES {$startpos, Abt.Otimes}
+  | CAT {$startpos, Abt.Ocat}
+  | LEN {$startpos, Abt.Olen}
+  | LET {$startpos, Abt.Olet}
+  ;
 %%
