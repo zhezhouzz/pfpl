@@ -48,13 +48,3 @@ type abt =
 type typ =
   | Tnum
   | Tstr
-
-type exp =
-  | Evar of var
-  | Enum of int
-  | Estr of string
-  | Eplus of exp * exp
-  | Etimes of exp * exp
-  | Ecat of exp * exp
-  | Elen of exp
-  | Elet of exp * var * exp
