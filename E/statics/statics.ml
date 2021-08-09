@@ -62,38 +62,78 @@ let ( let* ) o f =
   | None -> None
   | Some x -> f x
 
-let return x = Some x
-
 type typ_context = (var * typ) list
 
-(* Return type if (well-formed and) well-typed *)
-let rec abt_typ (a: abt) (ctx: typ_context) : typ option =
+type exp =
+  | Evar of var
+  | Enum of int
+  | Estr of string
+  | Eplus of exp * exp
+  | Etimes of exp * exp
+  | Ecat of exp * exp
+  | Elen of exp
+  | Elet of exp * var * exp
+
+let rec exp_from_abt (a: abt) (ctx: sort_context) : exp option =
   match a with
-  | Aleaf x -> List.assoc_opt x ctx
+  | Aleaf x ->
+      let* sort = List.assoc_opt x ctx in
+      if sort = Sexp then Some (Evar x) else None
   | Anode (op, args) ->
       match op, args with
-      | Onum _, [] -> Some Tnum
-      | Ostr _, [] -> Some Tstr
-      | Oplus, [([], a1); ([], a2)] | Otimes, [([], a1); ([], a2)] ->
-          let* typ1 = abt_typ a1 ctx in
-          let* typ2 = abt_typ a2 ctx in
-          if typ1 = Tnum && typ2 = Tnum then return Tnum else None
-      | Ocat, [([], a1); ([], a2)] ->
-          let* typ1 = abt_typ a1 ctx in
-          let* typ2 = abt_typ a2 ctx in
-          if typ1 = Tstr && typ2 = Tstr then return Tstr else None
+      | Onum n, [] -> Some (Enum n)
+      | Ostr s, [] -> Some (Estr s)
+      | Oplus, [([], a1); ([], a2)] ->
+          let* e1 = exp_from_abt a1 ctx in
+          let* e2 = exp_from_abt a2 ctx in
+          Some (Eplus (e1, e2))
+      | Otimes, [([], a1); ([], a2)] ->
+          let* e1 = exp_from_abt a1 ctx in
+          let* e2 = exp_from_abt a2 ctx in
+          Some (Etimes (e1, e2))
+      |  Ocat, [([], a1); ([], a2)] ->
+          let* e1 = exp_from_abt a1 ctx in
+          let* e2 = exp_from_abt a2 ctx in
+          Some ( Ecat (e1, e2))
       | Olen, [([], a1)] ->
-          let* typ1 = abt_typ a1 ctx in
-          if typ1 = Tstr then return Tnum else None
+          let* e1 = exp_from_abt a1 ctx in
+          Some (Elen e1)
       | Olet, [([], a1); ([x], a2)] ->
-          let* typ1 = abt_typ a1 ctx in
-          let ctx' = (x, typ1) :: ctx in
-          let* typ2 = abt_typ a2 ctx' in
-          return typ2
+          let* e1 = exp_from_abt a1 ctx in
+          let ctx' = (x, Sexp) :: ctx in
+          let* e2 = exp_from_abt a2 ctx' in
+          Some (Elet (e1, x, e2))
       | (Onum _ | Ostr _ | Oplus | Otimes | Ocat | Olen | Olet), _ ->
-          None (* a is not well-formed *)
+          None
 
-let%test _ = abt_typ variable_x [] = None
-let%test _ = abt_typ q2 [] = None
-let%test _ = abt_typ hello_len [] = Some Tnum
-let%test _ = abt_typ hello_len_square [] = Some Tnum
+(* Return type if well-typed *)
+let rec exp_typ (e: exp) (ctx: typ_context) : typ option =
+  match e with
+  | Evar x -> List.assoc_opt x ctx
+  | Enum _ -> Some Tnum
+  | Estr _ -> Some Tstr
+  | Eplus (e1, e2) | Etimes (e1, e2) ->
+      let* typ1 = exp_typ e1 ctx in
+      let* typ2 = exp_typ e2 ctx in
+      if typ1 = Tnum && typ2 = Tnum then Some Tnum else None
+  | Ecat (e1, e2) ->
+      let* typ1 = exp_typ e1 ctx in
+      let* typ2 = exp_typ e2 ctx in
+      if typ1 = Tnum && typ2 = Tnum then Some Tnum else None
+  | Elen e1 ->
+      let* typ1 = exp_typ e1 ctx in
+      if typ1 = Tstr then Some Tnum else None
+  | Elet (e1, x, e2) ->
+      let* typ1 = exp_typ e1 ctx in
+      let ctx' = (x, typ1) :: ctx in
+      let* typ2 = exp_typ e2 ctx' in
+      Some typ2
+
+let%test _ =
+  None = let* e = exp_from_abt variable_x [] in exp_typ e []
+let%test _ =
+  None = let* e = exp_from_abt q2 [] in exp_typ e []
+let%test _ =
+  Some Tnum = let* e = exp_from_abt hello_len [] in exp_typ e []
+let%test _ =
+  Some Tnum = let* e = exp_from_abt hello_len_square [] in exp_typ e []

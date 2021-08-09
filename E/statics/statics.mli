@@ -8,6 +8,16 @@ type sort_context
  *)
 val abt_sort : abt -> sort_context -> sort option
 
+(* Expression. PFPL notation:
+    e
+ *)
+type exp
+
+(* If the abt is an exp, i.e., sort is Sexp,
+   then return exp
+ *)
+val exp_from_abt : abt -> sort_context -> exp option
+
 (* Typing context. PFPL notation:
     Γ
  *)
@@ -19,4 +29,4 @@ type typ_context
      Γ ⊢ e : τ
    where Γ is a typing context, e an exp, τ a type.
  *)
-val abt_typ : abt -> typ_context -> typ option
+val exp_typ : exp -> typ_context -> typ option
