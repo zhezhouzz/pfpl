@@ -51,16 +51,16 @@ let hello_len_square =
   Anode (Olet, [ ([], hello_len); ([x], e2) ])
 (* }}} *)
 
+(* Tests for abt_sort {{{ *)
 let%test _ = abt_sort variable_x [] = None
 let%test _ = abt_sort q2 [] = Some Sexp
 let%test _ = abt_sort hello_len [] = Some Sexp
 let%test _ = abt_sort hello_len_square [] = Some Sexp
+(* }}} *)
 
-(* https://ocaml.org/manual/bindingops.html *)
-let ( let* ) o f =
-  match o with
-  | None -> None
-  | Some x -> f x
+type typ =
+  | Tnum        (* num *)
+  | Tstr        (* str *)
 
 type typ_context = (var * typ) list
 
@@ -73,6 +73,8 @@ type exp =
   | Ecat of exp * exp
   | Elen of exp
   | Elet of exp * var * exp
+
+let (let*) = Option.bind
 
 let rec exp_from_abt (a: abt) (ctx: sort_context) : exp option =
   match a with
@@ -106,6 +108,17 @@ let rec exp_from_abt (a: abt) (ctx: sort_context) : exp option =
       | (Onum _ | Ostr _ | Oplus | Otimes | Ocat | Olen | Olet), _ ->
           None
 
+let rec exp_to_abt (e: exp) : abt =
+  match e with
+  | Evar x           -> Aleaf x
+  | Enum n           -> Anode (Onum n, [])
+  | Estr s           -> Anode (Ostr s, [])
+  | Eplus (e1, e2)   -> Anode (Oplus, [([], exp_to_abt e1); ([], exp_to_abt e2)])
+  | Etimes (e1, e2)  -> Anode (Otimes, [([], exp_to_abt e1); ([], exp_to_abt e2)])
+  | Ecat (e1, e2)    -> Anode (Ocat, [([], exp_to_abt e1); ([], exp_to_abt e2)])
+  | Elen e1          -> Anode (Olen, [([], exp_to_abt e1)])
+  | Elet (e1, x, e2) -> Anode (Olet, [([], exp_to_abt e1); ([x], exp_to_abt e2)])
+
 (* Return type if well-typed *)
 let rec exp_typ (e: exp) (ctx: typ_context) : typ option =
   match e with
@@ -129,6 +142,7 @@ let rec exp_typ (e: exp) (ctx: typ_context) : typ option =
       let* typ2 = exp_typ e2 ctx' in
       Some typ2
 
+(* Tests for exp_from_abt {{{ *)
 let%test _ =
   None = let* e = exp_from_abt variable_x [] in exp_typ e []
 let%test _ =
@@ -137,3 +151,23 @@ let%test _ =
   Some Tnum = let* e = exp_from_abt hello_len [] in exp_typ e []
 let%test _ =
   Some Tnum = let* e = exp_from_abt hello_len_square [] in exp_typ e []
+(* }}} *)
+
+let subst (b: exp) (x: var) (a: exp) : exp option =
+  let abtb = exp_to_abt b in
+  let abta = exp_to_abt a in
+  let* abt = Abt.subst abtb x abta in
+  exp_from_abt abt []
+
+(* Tests for subst {{{ *)
+let%test _ =
+  let e1 = Enum 0 in
+  let x, y = "x", "y" in
+  let e2 = Eplus (Evar x, Evar y) in
+  subst (Evar y) x (Elet (e1, x, e2)) = None
+
+let%test _ =
+  let x = "x" in
+  subst (Elen (Estr "hello")) x (Eplus (Evar x, Enum 1)) =
+    Some (Eplus (Elen (Estr "hello"), Enum 1))
+(* }}} *)

@@ -1,9 +1,7 @@
 (copy_files# parsing/*.ml{,i})
-(copy_files# statics/*.ml{,i})
 
 (library
   (name abt)
-  (modules_without_implementation abt)
   (modules
     abt
     )
@@ -28,4 +26,13 @@
   (modules
     statics)
   (libraries abt)
+  )
+
+(library
+  (name dynamics)
+  (inline_tests)
+  (preprocess (pps ppx_inline_test))
+  (modules
+    dynamics)
+  (libraries statics)
   )
