@@ -42,8 +42,8 @@ let rec transition (e: exp) : exp option =
       Some (Elen e1')
   | Elet (e1, x, e2) -> begin
       match transition e1 with
-      | Some e1' -> Some (Elet (e1', x, e2))
-      | None -> subst e1 x e2
+      | Some e1' -> Some (Elet (e1', x, e2))            (* 5.4g *)
+      | None -> subst e1 x e2                           (* 5.4h *)
     end
   | Evar _ -> None
 
