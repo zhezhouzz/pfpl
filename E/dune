@@ -1,12 +1,13 @@
 (copy_files# parsing/*.ml{,i})
+(copy_files# statics/*.ml{,i})
 
 (library
   (name abt)
   (modules_without_implementation abt)
   (modules
-  abt
+    abt
+    )
   )
-)
 
 (library
   (name parsing)
@@ -22,8 +23,10 @@
 )
 
 (library
-(name e)
-(modules
-statics)
-(libraries abt)
-)
+  (name statics)
+  (inline_tests)
+  (preprocess (pps ppx_inline_test))
+  (modules
+    statics)
+  (libraries abt)
+  )

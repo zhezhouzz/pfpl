@@ -1,8 +1,8 @@
 (* Sort.
-   The only sort in E is exp. 
+   The only sort in E is exp.
  *)
 type sort =
-  | Sexp
+  | Sexp        (* exp *)
 
 (* Valence. PFPL notation:
     x1,...xk.a
@@ -10,18 +10,17 @@ type sort =
  *)
 type valence = sort list * sort
 
-(* Arity. PFPL notation: 
-    (v1,...vn)s 
+(* Arity. PFPL notation:
+    (v1,...vn)s
    where s is sort of operator, and v is valence of an argument.
    Arity of abts is generalized from that of asts (s1,...sn)s.
  *)
-type arity = {
-  sort:   sort;
-  params: valence list;
-}
+type arity =
+  { sort:   sort
+  ; params: valence list }
 
-(* Operations in E are 
-   num[n], str[s], plus, times, cat, len, let.
+(* Operator.
+   E has num[n], str[s], plus, times, cat, len, let.
  *)
 type op =               (* PFPL notations:    *)
   | Onum of int         (*      num[n]        *)
@@ -32,15 +31,26 @@ type op =               (* PFPL notations:    *)
   | Olen                (*      len(e)        *)
   | Olet                (*      let(e1; x.e2) *)
 
+(* Variable. *)
 type var = string
 
 (* Abstract binding tree. PFPL notation:
-    a ::= 
-        | x 
+    a ::=
+        | x
    where x is a variable, x1
         | o(x1.a1;...xn.an)
    where x is a sequence of variables, a is a sub-abt.
  *)
 type abt =
   | Aleaf of var
-  | Anode of op * (var list * abt) list
+  | Anode of op * arg list
+
+(* Argument.
+   This type is mutual recursive with abt.
+ *)
+and arg = var list * abt
+
+(* Type. *)
+type typ =
+  | Tnum        (* num *)
+  | Tstr        (* str *)
