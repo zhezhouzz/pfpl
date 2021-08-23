@@ -12,7 +12,10 @@ let read =
     Command.Let_syntax.(
       let%map_open inputfile = anon ("inputfile" %: regular_file)
       in
-      fun () -> let _ : Abt.abt = Parsing.Parse.parse inputfile in ()
+      fun () ->
+        let abt : Abt.abt = Parsing.Parse.parse inputfile in
+        let () = Parsing.Pprint.print_abt abt in
+        ()
     )
 
 let command =

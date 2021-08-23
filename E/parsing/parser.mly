@@ -5,7 +5,8 @@
 %token EOF LPAR RPAR LBRACK RBRACK
 (* keywords *)
 %token NUM STR PLUS TIMES CAT LEN LET DOT SEMICOLON COMMA
-%token <string> STRING IDENT
+%token <string> STRING
+%token <string> IDENT
 %token <int> NUMBER
 
 (* start symbol *)
@@ -18,6 +19,7 @@ abtt_eof:
   ;
 abtt:
   | o=opt LPAR a=bindings RPAR {$startpos, Past.Anode (o, a)}
+  | o=opt {$startpos, Past.Anode (o, [])}
   | a=IDENT {$startpos, Past.Aleaf a }
   ;
 bindings:

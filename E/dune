@@ -16,6 +16,7 @@
   parser
   lexer
   parse
+  pprint
 )
 (libraries abt)
 )

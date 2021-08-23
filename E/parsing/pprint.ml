@@ -1,21 +1,50 @@
 open Abt
 open Format
 
-let rec pprint_op ff abt =
-  let rec aux abt =
+let op_tostring op =
+  let aux op =
     match op with
-    | Onum i -> pp_print_int ff i
-    | Ostr s -> pp_print_string ff s
-    | Oplus -> pp_print_string ff "plus"
-    | Otimes -> pp_print_string ff "times"
-    | Ocat -> pp_print_string ff "times"
-    | Olen                (*      len(e)        *)
-    | Olet                (*      let(e1; x.e2) *)
+    | Onum i -> sprintf "num[%i]" i
+    | Ostr s -> sprintf "str[%s]" s
+    | Oplus -> "plus"
+    | Otimes -> "times"
+    | Ocat -> "times"
+    | Olen -> "len"
+    | Olet -> "let"
+  in
+  aux op
+
+let vs_tostring vs =
+  match vs with
+  | [] -> None
+  | [v] -> Some v
+  | _ ->
+    Some (
+      sprintf "(%s)" @@
+      List.fold_left (fun s v ->
+          sprintf "%s, %s" s v
+        ) "" vs)
 
 
-let rec pprint ff abt =
-  let rec aux abt =
-    match abt with
-    | Aleaf x -> pp_print_string ff x
-    | Anode (op, bindings) ->
-      
+let rec pprint (indent: int) abt : unit =
+  let make_bindings l =
+    List.iter (fun (vs, abt') ->
+        (print_break 0 indent;
+         match vs_tostring vs with
+         | None -> printf "@["
+         | Some s -> printf "@[%s." s);
+        pprint (indent + 2) abt';
+        printf ";@]@."
+      ) l in
+  match abt with
+  | Aleaf x -> printf "@[%s@]" x
+  | Anode (op, bindings) ->
+    match bindings with
+    | [] -> printf "@[%s@]" (op_tostring op)
+    | _ ->
+      printf "@[%s@](@;" (op_tostring op);
+      make_bindings bindings;
+      print_break 0 indent;
+      printf ")@]"
+
+let print_abt abt = (pprint 2 abt); printf "\n"
