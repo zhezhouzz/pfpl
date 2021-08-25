@@ -50,7 +50,9 @@ type abt =
  *)
 and arg = var list * abt
 
-(* Type. *)
-type typ =
-  | Tnum        (* num *)
-  | Tstr        (* str *)
+(* Substitution. PFPL notation:
+    [b/x]a
+   It is partially defined, undefined when a = o(x1.a1;...) and
+   some variable in xi is also in b.
+ *)
+val subst : abt -> var -> abt -> abt option
